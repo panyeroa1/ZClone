@@ -108,10 +108,15 @@ export const createDeepgramSession = async (params: {
   const connection = deepgram.listen.live({
     model: session.model,
     language: session.sourceLang === 'auto' ? 'multi' : session.sourceLang,
+    encoding: 'linear16',
+    sample_rate: 16000,
+    channels: 1,
     smart_format: true,
     diarize: true,
     punctuate: true,
     vad_events: true,
+    interim_results: true,
+    no_delay: true,
   });
   session.connection = connection;
   sessions.set(id, session);

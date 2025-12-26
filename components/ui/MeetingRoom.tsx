@@ -17,7 +17,7 @@ import TranslatorPanel from './TranslatorPanel';
 import CaptionsOverlay from './CaptionsOverlay';
 import { useRealtimeTranslator } from '@/hooks/useRealtimeTranslator';
 
-type CallLayoutType = 'grid' | 'speaker-left' | 'speaker-right';
+type CallLayoutType = 'grid' | 'speaker-left' | 'speaker-right' | 'speaker-bottom';
 const MeetingRoom = () => {
   const searchParams = useSearchParams();
   const isPersonalRoom = !!searchParams.get('personal');
@@ -33,6 +33,7 @@ const MeetingRoom = () => {
     switch (layout) {
       case 'grid': return <PaginatedGridLayout />
       case 'speaker-right': return <SpeakerLayout participantsBarPosition='left' />
+      case 'speaker-bottom': return <SpeakerLayout participantsBarPosition='bottom' />
       default: return <SpeakerLayout participantsBarPosition='right' />
     }
   }
@@ -42,7 +43,7 @@ const MeetingRoom = () => {
     <section className="relative h-screen w-full overflow-hidden pt-6 text-white">
       <CaptionsOverlay enabled={translator.settings.captionsEnabled} items={translator.captions} />
       <div className="relative flex size-full items-center justify-center">
-        <div className="flex size-full max-w-[1100px] items-center">
+        <div className="flex size-full items-center">
           <CallLayout />
         </div>
         <div className={cn("ml-3 hidden h-[calc(100vh-120px)]", { 'show-block': showParticipants })}>
@@ -67,7 +68,7 @@ const MeetingRoom = () => {
             </DropdownMenuTrigger>
           </div>
           <DropdownMenuContent className='border-white/10 bg-orbit-2 text-white' >
-            {['Grid', 'Speaker-Left', 'Speaker-Right'].map((item, index) => (
+            {['Grid', 'Speaker-Left', 'Speaker-Right', 'Speaker-Bottom'].map((item, index) => (
               <div key={index}>
                 <DropdownMenuItem className='cursor-pointer font-semibold focus:bg-white/10' onClick={() => setlayout(item.toLowerCase() as CallLayoutType)} >
                   {item}
@@ -80,7 +81,7 @@ const MeetingRoom = () => {
         <div className='self-center rounded-full border border-white/15 bg-white/5 p-2 text-white transition hover:bg-white/10'>
           <CallStatsButton />
         </div>
-        <button onClick={() => setshowParticipants((prev) => !prev)} className="rounded-full border border-white/15 bg-white/5 p-3 text-white transition hover:bg-white/10">
+        <button onClick={() => setshowParticipants((prev) => !prev)} className="rounded-full border border-white/15 bg-white/5 p-3 text-white transition hover:bg-white/10" title="Participants">
           <Users size={18} className='text-white' />
         </button>
         {!isPersonalRoom && <EndCallButton />}

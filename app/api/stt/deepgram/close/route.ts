@@ -5,7 +5,7 @@ import { closeDeepgramSession } from '@/lib/stt/deepgramSessionStore';
 export const runtime = 'nodejs';
 
 export async function POST(req: Request) {
-  const { userId } = auth();
+  const { userId } = await auth();
   if (!userId) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
 
   const body = (await req.json().catch(() => null)) as { session_id?: string } | null;
@@ -15,4 +15,3 @@ export async function POST(req: Request) {
   closeDeepgramSession(sessionId);
   return NextResponse.json({ ok: true });
 }
-

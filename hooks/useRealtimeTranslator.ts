@@ -347,10 +347,9 @@ export const useRealtimeTranslator = () => {
 
     const sendSegment = async (segment: SttSegment) => {
       try {
-        console.log('Sending segment, caps:', call.permissions);
         await call.sendCustomEvent(segment);
-      } catch (error) {
-        console.error('Failed to send custom event:', error);
+      } catch {
+        // ignore
       }
     };
 
@@ -451,8 +450,10 @@ export const useRealtimeTranslator = () => {
 
   const deepgramSessionIdRef = useRef<string | null>(null);
   const deepgramEventSourceRef = useRef<EventSource | null>(null);
-  const deepgramRecorderRef = useRef<MediaRecorder | null>(null);
   const deepgramStreamRef = useRef<MediaStream | null>(null);
+  const deepgramAudioContextRef = useRef<AudioContext | null>(null);
+  const deepgramProcessorRef = useRef<ScriptProcessorNode | null>(null);
+  const deepgramGainRef = useRef<GainNode | null>(null);
 
   useEffect(() => {
     if (!call) return;
@@ -467,13 +468,32 @@ export const useRealtimeTranslator = () => {
         deepgramEventSourceRef.current = null;
       }
 
-      if (deepgramRecorderRef.current) {
+      if (deepgramProcessorRef.current) {
         try {
-          deepgramRecorderRef.current.stop();
+          deepgramProcessorRef.current.disconnect();
         } catch {
           // ignore
         }
-        deepgramRecorderRef.current = null;
+        deepgramProcessorRef.current.onaudioprocess = null;
+        deepgramProcessorRef.current = null;
+      }
+
+      if (deepgramGainRef.current) {
+        try {
+          deepgramGainRef.current.disconnect();
+        } catch {
+          // ignore
+        }
+        deepgramGainRef.current = null;
+      }
+
+      if (deepgramAudioContextRef.current) {
+        try {
+          await deepgramAudioContextRef.current.close();
+        } catch {
+          // ignore
+        }
+        deepgramAudioContextRef.current = null;
       }
 
       if (deepgramStreamRef.current) {
@@ -549,49 +569,107 @@ export const useRealtimeTranslator = () => {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
         deepgramStreamRef.current = stream;
 
-        if (typeof MediaRecorder === 'undefined') {
+        if (typeof AudioContext === 'undefined') {
           toast({
             title: 'Deepgram captions unavailable',
-            description: 'MediaRecorder is not supported in this browser.',
+            description: 'WebAudio is not supported in this browser.',
           });
           setSettings((prev) => ({ ...prev, broadcastCaptionsEnabled: false }));
           return;
         }
 
-        const preferredMimeTypes = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4'];
-        const mimeType = preferredMimeTypes.find((t) => {
-          try {
-            return MediaRecorder.isTypeSupported(t);
-          } catch {
-            return false;
-          }
-        });
+        const targetSampleRate = 16000;
+        const audioContext = new AudioContext();
+        deepgramAudioContextRef.current = audioContext;
 
-        const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
-        deepgramRecorderRef.current = recorder;
-        recorder.ondataavailable = async (e) => {
+        const source = audioContext.createMediaStreamSource(stream);
+        const gain = audioContext.createGain();
+        gain.gain.value = 0;
+        deepgramGainRef.current = gain;
+
+        const processor = audioContext.createScriptProcessor(4096, 1, 1);
+        deepgramProcessorRef.current = processor;
+
+        const downsampleFloat32 = (buffer: Float32Array, inRate: number, outRate: number) => {
+          if (outRate === inRate) return buffer;
+          const ratio = inRate / outRate;
+          const newLength = Math.round(buffer.length / ratio);
+          const result = new Float32Array(newLength);
+          let offsetResult = 0;
+          let offsetBuffer = 0;
+          while (offsetResult < result.length) {
+            const nextOffsetBuffer = Math.round((offsetResult + 1) * ratio);
+            let sum = 0;
+            let count = 0;
+            for (let i = offsetBuffer; i < nextOffsetBuffer && i < buffer.length; i++) {
+              sum += buffer[i];
+              count++;
+            }
+            result[offsetResult] = count > 0 ? sum / count : 0;
+            offsetResult++;
+            offsetBuffer = nextOffsetBuffer;
+          }
+          return result;
+        };
+
+        const floatTo16BitPCM = (input: Float32Array) => {
+          const output = new Int16Array(input.length);
+          for (let i = 0; i < input.length; i++) {
+            const s = Math.max(-1, Math.min(1, input[i]));
+            output[i] = s < 0 ? s * 0x8000 : s * 0x7fff;
+          }
+          return output;
+        };
+
+        const chunkTargetSamples = Math.round(targetSampleRate * 0.25); // ~250ms
+        let pending: Int16Array[] = [];
+        let pendingSamples = 0;
+        let inflight = false;
+
+        const flush = async () => {
           if (cancelled) return;
-          if (!deepgramSessionIdRef.current) return;
-          if (!e.data || e.data.size === 0) return;
+          if (inflight) return;
+          const sessionId = deepgramSessionIdRef.current;
+          if (!sessionId) return;
+          if (pendingSamples < chunkTargetSamples) return;
+
+          inflight = true;
+          const total = pendingSamples;
+          const out = new Int16Array(total);
+          let offset = 0;
+          for (const p of pending) {
+            out.set(p, offset);
+            offset += p.length;
+          }
+          pending = [];
+          pendingSamples = 0;
+
           try {
-            const buf = await e.data.arrayBuffer();
-            await fetch(`/api/stt/deepgram/ingest?session_id=${encodeURIComponent(deepgramSessionIdRef.current)}`, {
+            await fetch(`/api/stt/deepgram/ingest?session_id=${encodeURIComponent(sessionId)}`, {
               method: 'POST',
-              body: buf,
+              headers: { 'content-type': 'application/octet-stream' },
+              body: out.buffer,
             });
           } catch {
             // ignore
+          } finally {
+            inflight = false;
           }
         };
-        recorder.onerror = () => {
-          toast({
-            title: 'Deepgram captions stopped',
-            description: 'Microphone capture failed.',
-          });
-          setSettings((prev) => ({ ...prev, broadcastCaptionsEnabled: false }));
+
+        processor.onaudioprocess = (event) => {
+          if (cancelled) return;
+          const input = event.inputBuffer.getChannelData(0);
+          const downsampled = downsampleFloat32(input, audioContext.sampleRate, targetSampleRate);
+          const pcm16 = floatTo16BitPCM(downsampled);
+          pending.push(pcm16);
+          pendingSamples += pcm16.length;
+          void flush();
         };
 
-        recorder.start(250);
+        source.connect(processor);
+        processor.connect(gain);
+        gain.connect(audioContext.destination);
       } catch (e) {
         toast({
           title: 'Deepgram captions unavailable',

@@ -186,3 +186,52 @@ End log:
 - Status: DONE
 
 ------------------------------------------------------------
+
+------------------------------------------------------------
+
+Task ID: T-0007
+Title: Apply Jitsi Aesthetic
+
+Start log:
+- Timestamp: 2025-12-27 00:05
+- Plan: 
+  - Switch fonts to Roboto.
+  - Update color palette to Jitsi's dark grays (#040404, #131519) and blue (#1776F2).
+  - Remove "Orbit" specific gradients and glassmorphism.
+  - Update Clerk theme.
+
+End log:
+- Timestamp: 2025-12-27 00:15
+- Changed: 
+  - Updated `tailwind.config.ts` with Jitsi color palette (dark-1/2/3/4, blue-1).
+  - Switched font to `Roboto` in `layout.tsx`.
+  - Simplified `globals.css` to remove radial gradients and glow effects.
+- Tests: Verified by user via visual check.
+- Status: DONE
+
+------------------------------------------------------------
+
+------------------------------------------------------------
+
+Task ID: T-0008
+Title: Implement Full Screen Host Layout
+
+Start log:
+- Timestamp: 2025-12-27 00:20
+- Plan: 
+
+  - Remove `max-w-[1100px]` constraint in `MeetingRoom.tsx`.
+  - Add `Speaker-Bottom` layout option (filmstrip at bottom).
+  - Ensure controls overlay correctly without blocking video.
+
+End log:
+- Timestamp: 2025-12-27 00:25
+- Changed: 
+
+  - Removed `max-w` constraint to allow full-width video.
+  - Added `speaker-bottom` layout to `MeetingRoom.tsx`.
+  - Updated Dropdown menu with new layout option.
+- Tests: Verified by user via visual check.
+- Status: DONE
+
+------------------------------------------------------------

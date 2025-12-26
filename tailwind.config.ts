@@ -19,60 +19,31 @@ const config = {
     },
     extend: {
       fontFamily: {
-        sans: ["var(--font-orbit-sans)", "system-ui", "sans-serif"],
-        display: ["var(--font-orbit-display)", "system-ui", "sans-serif"],
+        sans: ["var(--font-roboto)", "system-ui", "sans-serif"],
       },
       colors: {
-        orbit: {
-          1: '#0B111F',
-          2: '#101A2E',
-          3: '#17213A',
-          4: '#243152',
-          5: '#31406B',
-        },
-        comet: {
-          1: '#2F80FF',
-          2: '#6BB5FF',
-          3: '#A6D4FF',
-        },
-        aurora: {
-          1: '#00D3A7',
-          2: '#40F3C8',
-        },
-        ember: {
-          1: '#FFB24A',
-          2: '#FFD08A',
-        },
-        coral: {
-          1: '#FF6B7A',
-          2: '#FF9AA5',
-        },
-        mist: {
-          1: '#E4ECFF',
-          2: '#B4C4E3',
-        },
         dark: {
-          1: '#0B111F',
-          2: '#101A2E',
-          3: '#17213A',
-          4: '#243152',
+          1: '#131519', // Main background
+          2: '#1C2025', // Secondary background (cards/panels)
+          3: '#2b303b', // Inputs/Hover states
+          4: '#363B44', // Borders/Separators
         },
         blue: {
-          1: '#2F80FF',
+          1: '#1776F2', // Jitsi Blue
         },
         sky: {
-          1: '#DCE7FF',
-          2: '#EFF4FF',
-          3: '#F7FAFF',
+          1: '#C3D9F6',
+          2: '#E0EBFF',
+          3: '#F5F9FF',
         },
         orange: {
-          1: '#FFB24A',
+          1: '#FF9500',
         },
         purple: {
-          1: '#6B7CFF',
+          1: '#8338EC',
         },
         yellow: {
-          1: '#FFD166',
+          1: '#FFCC00',
         },
       },
       boxShadow: {
