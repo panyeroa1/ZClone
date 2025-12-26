@@ -165,9 +165,24 @@ Start log:
 - Plan: Investigate `call.sendCustomEvent` failure. Check Stream SDK permissions and event payload structure.
 
 End log:
-- Timestamp: 
-- Changed: 
-- Tests: 
-- Status: IN-PROGRESS
+- Timestamp: 2025-12-26 23:45
+- Changed: Added `console.log` to trace permissions. User provided new code for Deepgram STT which avoids the manual `sendCustomEvent` usage for browser STT.
+- Tests: User verified permissions via console log.
+- Status: DONE
+
+------------------------------------------------------------
+
+Task ID: T-0006
+Title: Add Gemini SDK
+
+Start log:
+- Timestamp: 2025-12-26 23:50
+- Plan: Install `@google/generative-ai` package for Gemini integration.
+
+End log:
+- Timestamp: 2025-12-26 23:51
+- Changed: Installed `@google/generative-ai`.
+- Tests: `npm install` passed.
+- Status: DONE
 
 ------------------------------------------------------------
