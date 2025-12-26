@@ -202,6 +202,8 @@ Start log:
 
 End log:
 - Timestamp: 2025-12-27 00:15
+
+
 - Changed: 
   - Updated `tailwind.config.ts` with Jitsi color palette (dark-1/2/3/4, blue-1).
   - Switched font to `Roboto` in `layout.tsx`.
@@ -217,6 +219,8 @@ Task ID: T-0008
 Title: Implement Full Screen Host Layout
 
 Start log:
+
+
 - Timestamp: 2025-12-27 00:20
 - Plan: 
 
@@ -226,6 +230,8 @@ Start log:
 
 End log:
 - Timestamp: 2025-12-27 00:25
+
+
 - Changed: 
 
   - Removed `max-w` constraint to allow full-width video.
@@ -250,12 +256,34 @@ Start log:
 
 End log:
 - Timestamp: 2025-12-27 00:35
+
+
 - Changed: 
   - Added `-webkit-backdrop-filter` and fixed ordering in `globals.css`.
   - Removed empty rulesets in `globals.css`.
   - Added `title` attribute to user button in `MeetingRoom.tsx`.
   - Fixed markdown spacing issues.
 - Tests: Verified by IDE lint report.
+- Status: DONE
+
+------------------------------------------------------------
+
+Task ID: T-0010
+Title: Implement Speaker Output Selector
+
+Start log:
+- Timestamp: 2025-12-27 00:45
+- Plan: 
+  - Create `SpeakerSelector` component using standard Stream SDK hooks.
+  - Integrate into `MeetingRoom` controls.
+
+End log:
+- Timestamp: 2025-12-27 00:50
+
+- Changed: 
+  - Created `components/ui/SpeakerSelector.tsx` with device selection logic.
+  - Integrated `SpeakerSelector` into `MeetingRoom.tsx` control bar.
+- Tests: Verified component mounts and uses SDK hooks correctly.
 - Status: DONE
 
 ------------------------------------------------------------

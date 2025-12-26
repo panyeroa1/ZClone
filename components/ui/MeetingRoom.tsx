@@ -16,6 +16,7 @@ import Loader from './Loader';
 import TranslatorPanel from './TranslatorPanel';
 import CaptionsOverlay from './CaptionsOverlay';
 import { useRealtimeTranslator } from '@/hooks/useRealtimeTranslator';
+import SpeakerSelector from './SpeakerSelector';
 
 type CallLayoutType = 'grid' | 'speaker-left' | 'speaker-right' | 'speaker-bottom';
 const MeetingRoom = () => {
@@ -61,6 +62,7 @@ const MeetingRoom = () => {
         >
           <Languages size={18} className="text-white" />
         </button>
+        <SpeakerSelector /> 
         <DropdownMenu>
           <div className="flex items-center">
             <DropdownMenuTrigger className='rounded-full border border-white/15 bg-white/5 p-3 text-white transition hover:bg-white/10' >
