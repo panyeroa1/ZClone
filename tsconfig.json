@@ -21,6 +21,7 @@
         "name": "next"
       }
     ],
+    "forceConsistentCasingInFileNames": true,
     "paths": {
       "@/*": [
         "./*"
