@@ -154,3 +154,20 @@ End log:
 
 ------------------------------------------------------------
 
+
+------------------------------------------------------------
+
+Task ID: T-0005
+Title: Debug Realtime Translator Error in sendCustomEvent
+
+Start log:
+- Timestamp: 2025-12-26 23:40
+- Plan: Investigate `call.sendCustomEvent` failure. Check Stream SDK permissions and event payload structure.
+
+End log:
+- Timestamp: 
+- Changed: 
+- Tests: 
+- Status: IN-PROGRESS
+
+------------------------------------------------------------

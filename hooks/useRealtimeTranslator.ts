@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useCall } from '@stream-io/video-react-sdk';
 import { useToast } from '@/components/ui/use-toast';
 import { DEFAULT_LANGUAGES, type TranslatorLanguage } from '@/lib/translator/languages';
@@ -31,8 +31,13 @@ export type CaptionItem = {
 export type RealtimeTranslatorSettings = {
   sourceLang: TranslatorLanguage['code'];
   targetLang: TranslatorLanguage['code'];
+  sttEngine: 'browser' | 'deepgram';
   captionsEnabled: boolean;
   readAloudEnabled: boolean;
+  readAloudEngine: 'local_tts' | 'gemini_live';
+  outputDeviceId: string; // 'default' or deviceId
+  duckingEnabled: boolean;
+  duckedCallVolume: number; // 0..1
   broadcastCaptionsEnabled: boolean;
   readAloudVolume: number; // 0..1
 };
@@ -60,8 +65,13 @@ const getSpeechRecognitionCtor = (): (new () => SpeechRecognition) | null => {
 const getDefaultSettings = (): RealtimeTranslatorSettings => ({
   sourceLang: 'en-US',
   targetLang: 'en-US',
+  sttEngine: 'browser',
   captionsEnabled: true,
   readAloudEnabled: false,
+  readAloudEngine: 'local_tts',
+  outputDeviceId: 'default',
+  duckingEnabled: true,
+  duckedCallVolume: 0.35,
   broadcastCaptionsEnabled: false,
   readAloudVolume: 0.9,
 });
@@ -90,6 +100,12 @@ export const useRealtimeTranslator = () => {
   const translateCacheRef = useRef<Map<string, string>>(new Map());
   const speakingQueueRef = useRef<string[]>([]);
 
+  const [audioOutputs, setAudioOutputs] = useState<MediaDeviceInfo[]>([]);
+  const translatedAudioRef = useRef<HTMLAudioElement | null>(null);
+  const callVolumeBeforeDuckRef = useRef<number | null>(null);
+  const isDuckedRef = useRef(false);
+  const hasShownGeminiFallbackRef = useRef(false);
+
   const captions = useMemo(() => {
     const items = Object.values(captionsById).sort((a, b) => a.start_ms - b.start_ms);
     return items.slice(-4);
@@ -102,6 +118,82 @@ export const useRealtimeTranslator = () => {
       // ignore
     }
   }, [settings]);
+
+  useEffect(() => {
+    if (typeof navigator === 'undefined' || !navigator.mediaDevices?.enumerateDevices) return;
+    const loadDevices = async () => {
+      try {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        setAudioOutputs(devices.filter((d) => d.kind === 'audiooutput'));
+      } catch {
+        // ignore
+      }
+    };
+    void loadDevices();
+  }, []);
+
+  useEffect(() => {
+    const el = translatedAudioRef.current as any;
+    if (!el || typeof el.setSinkId !== 'function') return;
+    if (!settings.outputDeviceId) return;
+    void el.setSinkId(settings.outputDeviceId).catch(() => {
+      // ignore
+    });
+  }, [settings.outputDeviceId]);
+
+  const applyDucking = useCallback(
+    (shouldDuck: boolean) => {
+      if (!call?.speaker) return;
+      if (!settings.duckingEnabled) return;
+
+      const targetVolume = clamp01(settings.duckedCallVolume);
+
+      if (shouldDuck) {
+        if (isDuckedRef.current) return;
+        isDuckedRef.current = true;
+        if (callVolumeBeforeDuckRef.current == null) {
+          callVolumeBeforeDuckRef.current =
+            typeof call.speaker.state.volume === 'number' ? call.speaker.state.volume : 1;
+        }
+        call.speaker.setVolume(targetVolume);
+        return;
+      }
+
+      if (!isDuckedRef.current) return;
+      isDuckedRef.current = false;
+      const restore = callVolumeBeforeDuckRef.current ?? 1;
+      call.speaker.setVolume(clamp01(restore));
+    },
+    [call, settings.duckedCallVolume, settings.duckingEnabled],
+  );
+
+  useEffect(() => {
+    const audio = translatedAudioRef.current;
+    if (!audio) return;
+    const onPlay = () => applyDucking(true);
+    const onEnded = () => applyDucking(false);
+    const onPause = () => applyDucking(false);
+
+    audio.addEventListener('play', onPlay);
+    audio.addEventListener('ended', onEnded);
+    audio.addEventListener('pause', onPause);
+    return () => {
+      audio.removeEventListener('play', onPlay);
+      audio.removeEventListener('ended', onEnded);
+      audio.removeEventListener('pause', onPause);
+    };
+  }, [applyDucking]);
+
+  useEffect(() => {
+    if (!call) return;
+    if (!settings.readAloudEnabled || !settings.duckingEnabled) {
+      applyDucking(false);
+      return;
+    }
+
+    applyDucking(true);
+    return () => applyDucking(false);
+  }, [applyDucking, call, settings.duckingEnabled, settings.readAloudEnabled]);
 
   useEffect(() => {
     if (!call) return;
@@ -131,7 +223,7 @@ export const useRealtimeTranslator = () => {
           },
         }));
 
-        if (settings.readAloudEnabled && segment.is_final) {
+        if (settings.readAloudEnabled && settings.readAloudEngine === 'local_tts' && segment.is_final) {
           speakingQueueRef.current.push(translatedText);
           speakNext();
         }
@@ -174,6 +266,7 @@ export const useRealtimeTranslator = () => {
 
   const speakNext = () => {
     if (!settings.readAloudEnabled) return;
+    if (settings.readAloudEngine !== 'local_tts') return;
     if (typeof window === 'undefined') return;
     if (!('speechSynthesis' in window)) return;
     if (window.speechSynthesis.speaking || window.speechSynthesis.pending) return;
@@ -184,6 +277,7 @@ export const useRealtimeTranslator = () => {
     const utterance = new SpeechSynthesisUtterance(nextText);
     utterance.lang = settings.targetLang;
     utterance.volume = clamp01(settings.readAloudVolume);
+    utterance.onstart = () => applyDucking(true);
     utterance.onend = () => speakNext();
     window.speechSynthesis.speak(utterance);
   };
@@ -193,6 +287,7 @@ export const useRealtimeTranslator = () => {
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
       window.speechSynthesis.cancel();
     }
+    applyDucking(false);
   };
 
   useEffect(() => {
@@ -224,6 +319,11 @@ export const useRealtimeTranslator = () => {
       }
     };
 
+    if (settings.sttEngine !== 'browser') {
+      cleanup();
+      return;
+    }
+
     if (!settings.broadcastCaptionsEnabled) {
       cleanup();
       return;
@@ -247,7 +347,20 @@ export const useRealtimeTranslator = () => {
 
     const sendSegment = async (segment: SttSegment) => {
       try {
+        console.log('Sending segment, caps:', call.permissions);
         await call.sendCustomEvent(segment);
+      } catch (error) {
+        console.error('Failed to send custom event:', error);
+      }
+    };
+
+    const persistSegment = async (segment: SttSegment) => {
+      try {
+        await fetch('/api/transcripts/segment', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify(segment),
+        });
       } catch {
         // ignore
       }
@@ -294,6 +407,7 @@ export const useRealtimeTranslator = () => {
         if (now - lastInterimSentAtRef.current < minIntervalMs) return;
         lastInterimSentAtRef.current = now;
         void sendSegment(segment);
+        void persistSegment(segment);
         return;
       }
 
@@ -301,6 +415,7 @@ export const useRealtimeTranslator = () => {
       activeSegmentIdRef.current = null;
       activeSegmentStartMsRef.current = 0;
       void sendSegment(segment);
+      void persistSegment(segment);
     };
 
     recognition.onerror = () => {
@@ -332,7 +447,292 @@ export const useRealtimeTranslator = () => {
 
     return cleanup;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [call, settings.broadcastCaptionsEnabled, settings.sourceLang]);
+  }, [call, settings.broadcastCaptionsEnabled, settings.sourceLang, settings.sttEngine]);
+
+  const deepgramSessionIdRef = useRef<string | null>(null);
+  const deepgramEventSourceRef = useRef<EventSource | null>(null);
+  const deepgramRecorderRef = useRef<MediaRecorder | null>(null);
+  const deepgramStreamRef = useRef<MediaStream | null>(null);
+
+  useEffect(() => {
+    if (!call) return;
+    if (settings.sttEngine !== 'deepgram') return;
+    if (!settings.broadcastCaptionsEnabled) return;
+
+    let cancelled = false;
+
+    const cleanup = async () => {
+      if (deepgramEventSourceRef.current) {
+        deepgramEventSourceRef.current.close();
+        deepgramEventSourceRef.current = null;
+      }
+
+      if (deepgramRecorderRef.current) {
+        try {
+          deepgramRecorderRef.current.stop();
+        } catch {
+          // ignore
+        }
+        deepgramRecorderRef.current = null;
+      }
+
+      if (deepgramStreamRef.current) {
+        for (const track of deepgramStreamRef.current.getTracks()) {
+          try {
+            track.stop();
+          } catch {
+            // ignore
+          }
+        }
+        deepgramStreamRef.current = null;
+      }
+
+      const sessionId = deepgramSessionIdRef.current;
+      deepgramSessionIdRef.current = null;
+      if (sessionId) {
+        try {
+          await fetch('/api/stt/deepgram/close', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ session_id: sessionId }),
+          });
+        } catch {
+          // ignore
+        }
+      }
+    };
+
+    const start = async () => {
+      try {
+        const createRes = await fetch('/api/stt/deepgram/session', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ room_id: call.id, source_lang: settings.sourceLang }),
+        });
+
+        if (!createRes.ok) throw new Error('deepgram_session_failed');
+        const created = (await createRes.json().catch(() => null)) as { session_id?: string } | null;
+        const sessionId = created?.session_id;
+        if (!sessionId) throw new Error('deepgram_session_failed');
+        deepgramSessionIdRef.current = sessionId;
+
+        const eventSource = new EventSource(`/api/stt/deepgram/events?session_id=${encodeURIComponent(sessionId)}`);
+        deepgramEventSourceRef.current = eventSource;
+
+        eventSource.onmessage = async (ev) => {
+          if (cancelled) return;
+          const payload = safeJsonParse<any>(ev.data);
+          if (!payload) return;
+          if (payload.type === 'deepgram.persist_error') {
+            toast({
+              title: 'Transcript saving failed',
+              description: 'Supabase persistence is not configured correctly (check SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY).',
+            });
+            return;
+          }
+          if (payload.type !== 'stt.segment') return;
+          try {
+            await call.sendCustomEvent(payload);
+          } catch {
+            // ignore
+          }
+        };
+
+        eventSource.onerror = () => {
+          toast({
+            title: 'Deepgram captions stopped',
+            description: 'Connection lost. Try toggling broadcast captions again.',
+          });
+          setSettings((prev) => ({ ...prev, broadcastCaptionsEnabled: false }));
+        };
+
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        deepgramStreamRef.current = stream;
+
+        if (typeof MediaRecorder === 'undefined') {
+          toast({
+            title: 'Deepgram captions unavailable',
+            description: 'MediaRecorder is not supported in this browser.',
+          });
+          setSettings((prev) => ({ ...prev, broadcastCaptionsEnabled: false }));
+          return;
+        }
+
+        const preferredMimeTypes = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4'];
+        const mimeType = preferredMimeTypes.find((t) => {
+          try {
+            return MediaRecorder.isTypeSupported(t);
+          } catch {
+            return false;
+          }
+        });
+
+        const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
+        deepgramRecorderRef.current = recorder;
+        recorder.ondataavailable = async (e) => {
+          if (cancelled) return;
+          if (!deepgramSessionIdRef.current) return;
+          if (!e.data || e.data.size === 0) return;
+          try {
+            const buf = await e.data.arrayBuffer();
+            await fetch(`/api/stt/deepgram/ingest?session_id=${encodeURIComponent(deepgramSessionIdRef.current)}`, {
+              method: 'POST',
+              body: buf,
+            });
+          } catch {
+            // ignore
+          }
+        };
+        recorder.onerror = () => {
+          toast({
+            title: 'Deepgram captions stopped',
+            description: 'Microphone capture failed.',
+          });
+          setSettings((prev) => ({ ...prev, broadcastCaptionsEnabled: false }));
+        };
+
+        recorder.start(250);
+      } catch (e) {
+        toast({
+          title: 'Deepgram captions unavailable',
+          description: e instanceof Error ? e.message : 'Unable to start Deepgram captions.',
+        });
+        setSettings((prev) => ({ ...prev, broadcastCaptionsEnabled: false }));
+      }
+    };
+
+    void start();
+
+    return () => {
+      cancelled = true;
+      void cleanup();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [call, settings.broadcastCaptionsEnabled, settings.sourceLang, settings.sttEngine, toast]);
+
+  useEffect(() => {
+    if (!call) return;
+    if (!settings.readAloudEnabled) return;
+    if (settings.readAloudEngine !== 'gemini_live') return;
+
+    let isCancelled = false;
+    const cursorStorageKey = `orbit_gemini_live_cursor:${call.id}:${settings.targetLang}`;
+
+    type Cursor = { after_start_ms: number; after_segment_id?: string };
+    const loadCursor = (): Cursor => {
+      const stored = safeJsonParse<Cursor>(typeof window !== 'undefined' ? window.localStorage.getItem(cursorStorageKey) : null);
+      if (stored && typeof stored.after_start_ms === 'number') return stored;
+      return { after_start_ms: -1 };
+    };
+
+    const saveCursor = (cursor: Cursor) => {
+      try {
+        window.localStorage.setItem(cursorStorageKey, JSON.stringify(cursor));
+      } catch {
+        // ignore
+      }
+    };
+
+    const speakFallback = (text: string) => {
+      if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = settings.targetLang;
+      utterance.rate = 0.98;
+      utterance.pitch = 1.02;
+      utterance.volume = clamp01(settings.readAloudVolume);
+      utterance.onstart = () => applyDucking(true);
+      utterance.onend = () => applyDucking(false);
+      window.speechSynthesis.speak(utterance);
+    };
+
+    let cursor = loadCursor();
+
+    const tick = async () => {
+      if (isCancelled) return;
+      try {
+        const url = new URL('/api/transcripts/poll', window.location.origin);
+        url.searchParams.set('room_id', call.id);
+        url.searchParams.set('after_start_ms', String(cursor.after_start_ms));
+        if (cursor.after_segment_id) url.searchParams.set('after_segment_id', cursor.after_segment_id);
+        url.searchParams.set('limit', '25');
+
+        const res = await fetch(url.toString());
+        if (!res.ok) return;
+
+        const data = (await res.json().catch(() => null)) as { items?: Array<any> } | null;
+        const items = Array.isArray(data?.items) ? data!.items! : [];
+        if (items.length === 0) return;
+
+        for (const item of items) {
+          if (isCancelled) return;
+          const segmentId = String(item.segment_id || '');
+          const sourceLang = String(item.source_lang || 'auto');
+          const text = String(item.text || '').trim();
+          if (!segmentId || !text) continue;
+
+          const cacheKey = `${segmentId}:${settings.targetLang}`;
+          let translatedText = translateCacheRef.current.get(cacheKey);
+          if (!translatedText) {
+            translatedText = await fetch('/api/translator/translate', {
+              method: 'POST',
+              headers: { 'content-type': 'application/json' },
+              body: JSON.stringify({ text, source_lang: sourceLang, target_lang: settings.targetLang }),
+            })
+              .then(async (r) => (r.ok ? r.json() : null))
+              .then((j: any) => String(j?.text || text))
+              .catch(() => text);
+            translateCacheRef.current.set(cacheKey, translatedText);
+          }
+
+          if (settings.captionsEnabled) {
+            setCaptionsById((prev) => ({
+              ...prev,
+              [segmentId]: {
+                segment_id: segmentId,
+                speaker_id: String(item.speaker_id || 'unknown'),
+                start_ms: Number(item.start_ms || 0),
+                end_ms: Number(item.end_ms || 0),
+                text: translatedText!,
+                is_final: true,
+              },
+            }));
+          }
+
+          // Gemini Live audio relay placeholder: until wired, fall back to local TTS.
+          if (!hasShownGeminiFallbackRef.current) {
+            hasShownGeminiFallbackRef.current = true;
+            toast({
+              title: 'Gemini Live read-aloud not wired yet',
+              description: 'Using local TTS fallback; wire the Gemini Live relay to output audio to the selected device.',
+            });
+          }
+          speakFallback(translatedText);
+
+          cursor = { after_start_ms: Number(item.start_ms || cursor.after_start_ms), after_segment_id: segmentId };
+          saveCursor(cursor);
+        }
+      } catch {
+        // ignore
+      }
+    };
+
+    const intervalId = window.setInterval(() => void tick(), 1200);
+    void tick();
+
+    return () => {
+      isCancelled = true;
+      window.clearInterval(intervalId);
+    };
+  }, [
+    applyDucking,
+    call,
+    settings.captionsEnabled,
+    settings.readAloudEnabled,
+    settings.readAloudEngine,
+    settings.readAloudVolume,
+    settings.targetLang,
+    toast,
+  ]);
 
   const resetCaptions = () => setCaptionsById({});
 
@@ -345,6 +745,7 @@ export const useRealtimeTranslator = () => {
     resetCaptions,
     languages,
     stopReadAloud,
+    audioOutputs,
+    translatedAudioRef,
   };
 };
-

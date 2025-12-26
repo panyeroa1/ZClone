@@ -172,9 +172,8 @@ Mixing:
 Orbit Conference uses Stream Video as the SFU layer. For UI transport, Stream `call.sendCustomEvent(...)` can carry caption/transcript messages to all participants.
 
 Current in-app implementation is intentionally minimal:
-- Captions broadcast uses browser SpeechRecognition and sends `stt.segment` as Stream custom events.
+- Captions broadcast supports browser SpeechRecognition or **Deepgram Live** (`@deepgram/sdk`) and sends `stt.segment` as Stream custom events.
 - Translation is per listener via `POST /api/translator/translate` (Gemini-ready, falls back to passthrough if `GEMINI_API_KEY` is not set).
 - Read‑aloud is local `speechSynthesis` (placeholder for Gemini Live audio).
 
 The production architecture above can replace the browser STT and local TTS without changing the client message contracts.
-

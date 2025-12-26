@@ -89,8 +89,13 @@ const MeetingRoom = () => {
       <TranslatorPanel
         isOpen={isTranslatorOpen}
         onClose={() => setIsTranslatorOpen(false)}
-        translator={translator}
+        translator={{
+          ...translator,
+          audioOutputs: translator.audioOutputs.map((d) => ({ deviceId: d.deviceId, label: d.label })),
+        }}
       />
+
+      <audio ref={translator.translatedAudioRef} className="hidden" />
     </section>
   )
 }

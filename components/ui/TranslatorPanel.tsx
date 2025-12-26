@@ -13,6 +13,7 @@ type Props = {
     resetCaptions: () => void;
     stopReadAloud: () => void;
     languages: { code: string; label: string }[];
+    audioOutputs: { deviceId: string; label: string }[];
   };
 };
 
@@ -38,6 +39,23 @@ const TranslatorPanel = ({ isOpen, onClose, translator }: Props) => {
           </div>
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="flex flex-col gap-2">
+              <label className="text-xs font-semibold uppercase tracking-[0.2em] text-mist-2">STT engine</label>
+              <select
+                value={settings.sttEngine}
+                className={selectClassName}
+                onChange={(e) =>
+                  setSettings((prev) => ({
+                    ...prev,
+                    sttEngine: e.target.value as RealtimeTranslatorSettings['sttEngine'],
+                  }))
+                }
+              >
+                <option value="browser">Browser (SpeechRecognition)</option>
+                <option value="deepgram">Deepgram Live</option>
+              </select>
+            </div>
+
             <div className="flex flex-col gap-2">
               <label className="text-xs font-semibold uppercase tracking-[0.2em] text-mist-2">Speaker language</label>
               <select
@@ -91,7 +109,7 @@ const TranslatorPanel = ({ isOpen, onClose, translator }: Props) => {
             </label>
 
             <label className="flex items-center justify-between gap-3 text-sm">
-              <span className="text-white">Read-aloud translation (local TTS)</span>
+              <span className="text-white">Read-aloud translation</span>
               <input
                 type="checkbox"
                 className={checkboxClassName}
@@ -102,6 +120,64 @@ const TranslatorPanel = ({ isOpen, onClose, translator }: Props) => {
                 }}
               />
             </label>
+
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div className="flex flex-col gap-2">
+                <label className="text-xs font-semibold uppercase tracking-[0.2em] text-mist-2">Read-aloud engine</label>
+                <select
+                  value={settings.readAloudEngine}
+                  className={selectClassName}
+                  onChange={(e) =>
+                    setSettings((prev) => ({
+                      ...prev,
+                      readAloudEngine: e.target.value as RealtimeTranslatorSettings['readAloudEngine'],
+                    }))
+                  }
+                >
+                  <option value="local_tts">Local TTS (fallback)</option>
+                  <option value="gemini_live">Gemini Live (relay)</option>
+                </select>
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <label className="text-xs font-semibold uppercase tracking-[0.2em] text-mist-2">Translated audio output</label>
+                <select
+                  value={settings.outputDeviceId}
+                  className={selectClassName}
+                  onChange={(e) => setSettings((prev) => ({ ...prev, outputDeviceId: e.target.value }))}
+                >
+                  <option value="default">Default</option>
+                  {translator.audioOutputs.map((d) => (
+                    <option key={d.deviceId} value={d.deviceId}>
+                      {d.label || 'Speaker'}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <label className="flex items-center justify-between gap-3 text-sm">
+              <span className="text-white">Auto-duck original call audio</span>
+              <input
+                type="checkbox"
+                className={checkboxClassName}
+                checked={settings.duckingEnabled}
+                onChange={(e) => setSettings((prev) => ({ ...prev, duckingEnabled: e.target.checked }))}
+              />
+            </label>
+
+            <div className="flex items-center justify-between gap-4">
+              <span className="text-xs font-semibold uppercase tracking-[0.2em] text-mist-2">Original audio level</span>
+              <input
+                type="range"
+                min={0.15}
+                max={0.8}
+                step={0.05}
+                value={settings.duckedCallVolume}
+                onChange={(e) => setSettings((prev) => ({ ...prev, duckedCallVolume: Number(e.target.value) }))}
+                className="w-40 accent-[#2F80FF]"
+              />
+            </div>
 
             <div className="flex items-center justify-between gap-4">
               <span className="text-xs font-semibold uppercase tracking-[0.2em] text-mist-2">Read-aloud volume</span>
@@ -138,7 +214,7 @@ const TranslatorPanel = ({ isOpen, onClose, translator }: Props) => {
           </div>
 
           <p className="text-xs text-mist-2">
-            Gemini Live read-aloud can replace local TTS later; this UI already matches the per-listener session model.
+            For Gemini Live read-aloud, use a backend relay that streams PCM audio chunks; this UI already supports selecting a separate output device.
           </p>
         </div>
       </DialogContent>
@@ -147,4 +223,3 @@ const TranslatorPanel = ({ isOpen, onClose, translator }: Props) => {
 };
 
 export default TranslatorPanel;
-

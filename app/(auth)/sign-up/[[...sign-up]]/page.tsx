@@ -5,7 +5,7 @@ const SignUpPage = () => {
     return (
         <main className='flex-center h-screen w-full px-6'>
             <div className='orbit-rise'>
-                <SignUp />
+                <SignUp routing="path" path="/sign-up" fallbackRedirectUrl="/" />
             </div>
         </main>
     )

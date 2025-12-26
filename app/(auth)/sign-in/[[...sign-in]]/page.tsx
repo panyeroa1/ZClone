@@ -4,7 +4,7 @@ const SignInPage = () => {
   return (
     <main className='flex-center h-screen w-full px-6'>
         <div className='orbit-rise'>
-          <SignIn/>
+          <SignIn routing="path" path="/sign-in" fallbackRedirectUrl="/" />
         </div>
     </main>
   )

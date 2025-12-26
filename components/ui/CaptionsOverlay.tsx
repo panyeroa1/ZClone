@@ -1,29 +1,49 @@
 'use client';
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import type { CaptionItem } from '@/hooks/useRealtimeTranslator';
 
+const MAX_CHARS = 140;
+
+const tailText = (text: string, maxChars: number) => {
+  if (text.length <= maxChars) return text;
+  const sliced = text.slice(text.length - maxChars);
+  const firstSpace = sliced.indexOf(' ');
+  return firstSpace === -1 ? sliced : sliced.slice(firstSpace + 1);
+};
+
 const CaptionsOverlay = ({ enabled, items }: { enabled: boolean; items: CaptionItem[] }) => {
-  if (!enabled) return null;
   const latest = items[items.length - 1];
-  if (!latest?.text) return null;
+
+  const displayText = useMemo(() => {
+    if (!enabled) return '';
+    const usable = items.filter((i) => i.text?.trim());
+    if (usable.length === 0) return '';
+
+    const finals = usable.filter((i) => i.is_final);
+    const interim = usable.slice().reverse().find((i) => !i.is_final);
+
+    const finalTail = finals
+      .slice(-6)
+      .map((i) => i.text.trim())
+      .join(' ');
+
+    const combined = `${finalTail}${interim ? ` ${interim.text.trim()}` : ''}`.trim();
+    return tailText(combined, MAX_CHARS);
+  }, [enabled, items]);
+
+  if (!enabled) return null;
+  if (!displayText) return null;
 
   return (
-    <div className="pointer-events-none fixed bottom-24 left-1/2 z-30 w-[min(92vw,900px)] -translate-x-1/2">
-      <div className="orbit-panel rounded-2xl px-5 py-4">
-        <div className="flex items-center justify-between gap-4">
-          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-mist-2">Captions</p>
-          {!latest.is_final && (
-            <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.24em] text-mist-2">
-              live
-            </span>
-          )}
-        </div>
-        <p className="mt-2 text-sm font-medium text-white sm:text-base">{latest.text}</p>
+    <div className="pointer-events-none fixed bottom-24 left-1/2 z-30 w-[min(94vw,980px)] -translate-x-1/2 px-3">
+      <div className="orbit-captions">
+        <p className="orbit-captions__text" data-final={latest?.is_final ? 'true' : 'false'}>
+          {displayText}
+        </p>
       </div>
     </div>
   );
 };
 
 export default CaptionsOverlay;
-
