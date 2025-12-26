@@ -4,10 +4,10 @@ import { Metadata } from 'next';
 import React, { ReactNode } from 'react'
 
 export const metadata: Metadata = {
-    title: "YOOM",
-    description: "Video calling app",
+    title: "Orbit Conference",
+    description: "Orbit Conference video collaboration hub.",
     icons: {
-        icon: '/icons/logo.svg'
+        icon: '/images/watermark.svg'
     }
 };
 
@@ -17,7 +17,10 @@ const HomeLayout = ({ children }: { children: ReactNode }) => {
             <Navbar />
             <div className='flex'>
                 <SideBar />
-                <section className='flex min-h-screen flex-1 flex-col px-6 pb-6 pt-28 max-md:pb-14 sm:px-14'>
+                <section className='relative flex min-h-screen flex-1 flex-col px-6 pb-10 pt-28 max-md:pb-16 sm:px-12'>
+                    <div className='pointer-events-none absolute inset-0 -z-10 opacity-40'>
+                        <div className='orbit-grid h-full w-full' />
+                    </div>
                     <div className='w-full'>
                         {children}
                     </div>

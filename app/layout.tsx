@@ -1,16 +1,18 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { DM_Sans, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import { ClerkProvider } from "@clerk/nextjs";
 import { Toaster } from "@/components/ui/toaster"
+import EntryLogoSplash from "@/components/ui/EntryLogoSplash";
 import '@stream-io/video-react-sdk/dist/css/styles.css';
 import 'react-datepicker/dist/react-datepicker.css';
-const inter = Inter({ subsets: ["latin"] });
+const orbitSans = DM_Sans({ subsets: ["latin"], variable: "--font-orbit-sans" });
+const orbitDisplay = Space_Grotesk({ subsets: ["latin"], variable: "--font-orbit-display" });
 export const metadata: Metadata = {
-  title: "YOOM",
-  description: "Video calling app",
+  title: "Orbit Conference",
+  description: "Orbit Conference video collaboration hub.",
   icons:{
-    icon:'/icons/logo.svg'
+    icon:'/images/watermark.svg'
   }
 };
 
@@ -20,9 +22,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <ClerkProvider appearance={{ layout: { logoImageUrl: '/icons/yoom-logo.svg', socialButtonsVariant: 'iconButton' }, variables: { colorText: '#fff', colorPrimary: '#0E78F9', colorBackground: '#1c1f2e', colorInputBackground: '#252a41', colorInputText: '#fff' } }}>
-        <body className={`${inter.className} bg-dark-2`}>
+    <html lang="en" className="h-full">
+      <ClerkProvider appearance={{ layout: { logoImageUrl: '/images/watermark.svg', socialButtonsVariant: 'iconButton' }, variables: { colorText: '#E4ECFF', colorPrimary: '#2F80FF', colorBackground: '#0B111F', colorInputBackground: '#17213A', colorInputText: '#E4ECFF' } }}>
+        <body className={`${orbitSans.variable} ${orbitDisplay.variable} orbit-shell font-sans antialiased`}>
+          <EntryLogoSplash />
           {children}
           <Toaster/>
         </body>

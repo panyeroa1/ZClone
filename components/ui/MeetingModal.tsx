@@ -21,16 +21,16 @@ const MeetingModal = ({ isOpen, onClose, title, className, children, handleClick
     return (
 
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className='flex w-full max-w-[520px] flex-col gap-6 border-none bg-dark-1 px-6 py-9 text-white'>
+            <DialogContent className='orbit-panel flex w-full max-w-[520px] flex-col gap-6 rounded-2xl px-7 py-8 text-white'>
                 <div className="flex flex-col gap-6">
                     {image && (
                         <div className="flex justify-center">
                             <Image src={image} alt='Image' width={72} height={72} />
                         </div>
                     )}
-                    <h1 className={cn('text-3xl font-bold leading-[42px]', className)} >{title}</h1>
+                    <h1 className={cn('font-display text-3xl font-semibold leading-[42px]', className)} >{title}</h1>
                     {children}
-                    <Button className='bg-blue-1 focus-visible:ring-0 focus-visible:ring-offset-0' onClick={handleClick}> {buttonIcon && <Image src={buttonIcon} alt='Button icon' width={12} height={12} />}&nbsp; {buttonText || 'Schedule Meeting'}</Button>
+                    <Button className='bg-comet-1 text-white shadow-orbit-soft hover:bg-comet-2 focus-visible:ring-2 focus-visible:ring-comet-1 focus-visible:ring-offset-0' onClick={handleClick}> {buttonIcon && <Image src={buttonIcon} alt='Button icon' width={12} height={12} />}&nbsp; {buttonText || 'Schedule Meeting'}</Button>
                 </div>
             </DialogContent>
         </Dialog>

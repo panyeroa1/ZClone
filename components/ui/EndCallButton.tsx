@@ -15,7 +15,7 @@ const EndCallButton = () => {
     if (!isMeetingOwner) return null;
 
     return (
-        <Button onClick={async () => { await call.endCall(); router.push('/') }} className='bg-red-500 self-center' >
+        <Button onClick={async () => { await call.endCall(); router.push('/') }} className='self-center rounded-full bg-coral-1 px-5 text-white hover:bg-coral-2' >
             End call for everyone
         </Button>
     )

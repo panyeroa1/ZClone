@@ -8,6 +8,199 @@
   box-sizing: border-box;
 }
 
+:root {
+  color-scheme: dark;
+}
+
+.orbit-shell {
+  min-height: 100%;
+  background:
+    radial-gradient(1200px 600px at 10% -20%, rgba(47, 128, 255, 0.35), transparent 60%),
+    radial-gradient(900px 520px at 90% 10%, rgba(0, 211, 167, 0.2), transparent 55%),
+    radial-gradient(800px 380px at 50% 120%, rgba(255, 178, 74, 0.18), transparent 60%),
+    linear-gradient(180deg, #0b111f 0%, #101a2e 45%, #0b111f 100%);
+  color: #e4ecff;
+}
+
+.orbit-panel {
+  background: linear-gradient(135deg, rgba(16, 26, 46, 0.95), rgba(11, 17, 31, 0.95));
+  border: 1px solid rgba(148, 177, 230, 0.16);
+  box-shadow: 0 40px 120px -80px rgba(47, 128, 255, 0.8);
+}
+
+.orbit-card {
+  background: linear-gradient(135deg, rgba(23, 33, 58, 0.9), rgba(11, 17, 31, 0.92));
+  border: 1px solid rgba(148, 177, 230, 0.12);
+  box-shadow: 0 24px 70px -50px rgba(0, 211, 167, 0.5);
+}
+
+.orbit-grid {
+  background-image:
+    linear-gradient(to right, rgba(228, 236, 255, 0.08) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(228, 236, 255, 0.08) 1px, transparent 1px);
+  background-size: 48px 48px;
+  opacity: 0.2;
+}
+
+.orbit-rise {
+  animation: orbit-rise 0.65s ease-out both;
+}
+
+.orbit-rise-delay-1 {
+  animation-delay: 0.08s;
+}
+
+.orbit-rise-delay-2 {
+  animation-delay: 0.16s;
+}
+
+.orbit-rise-delay-3 {
+  animation-delay: 0.24s;
+}
+
+.orbit-rise-delay-4 {
+  animation-delay: 0.32s;
+}
+
+@keyframes orbit-rise {
+  0% {
+    opacity: 0;
+    transform: translateY(14px) scale(0.98);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.orbit-splash {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(11, 17, 31, 0.82);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  animation: orbit-splash-fade 1.1s ease-out forwards;
+}
+
+.orbit-splash__content {
+  position: relative;
+  display: grid;
+  place-items: center;
+  gap: 16px;
+}
+
+.orbit-splash__logo {
+  width: min(70vw, 420px);
+  height: auto;
+  opacity: 0;
+  transform: translateY(10px) scale(0.98);
+  filter: drop-shadow(0 24px 50px rgba(47, 128, 255, 0.35));
+  animation: orbit-logo-reveal 0.9s ease-out 0.08s forwards;
+}
+
+.orbit-splash__ring {
+  position: absolute;
+  width: min(74vw, 520px);
+  aspect-ratio: 1 / 1;
+  border-radius: 999px;
+  border: 1px solid rgba(228, 236, 255, 0.18);
+  box-shadow:
+    0 0 0 1px rgba(47, 128, 255, 0.2) inset,
+    0 40px 120px -90px rgba(0, 211, 167, 0.6);
+  opacity: 0;
+  animation: orbit-ring 1.1s ease-out 0.05s forwards;
+}
+
+.orbit-splash__glow {
+  position: absolute;
+  width: min(60vw, 420px);
+  height: min(40vw, 280px);
+  border-radius: 999px;
+  background: radial-gradient(circle at 30% 30%, rgba(47, 128, 255, 0.25), transparent 60%),
+    radial-gradient(circle at 70% 50%, rgba(0, 211, 167, 0.18), transparent 60%),
+    radial-gradient(circle at 50% 80%, rgba(255, 178, 74, 0.14), transparent 65%);
+  filter: blur(14px);
+  opacity: 0;
+  animation: orbit-glow 1.1s ease-out 0.05s forwards;
+}
+
+@keyframes orbit-splash-fade {
+  0% {
+    opacity: 0;
+  }
+
+  10% {
+    opacity: 1;
+  }
+
+  78% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+    pointer-events: none;
+  }
+}
+
+@keyframes orbit-logo-reveal {
+  0% {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+
+  65% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes orbit-ring {
+  0% {
+    opacity: 0;
+    transform: scale(0.92) rotate(-10deg);
+  }
+
+  55% {
+    opacity: 0.9;
+  }
+
+  100% {
+    opacity: 0.7;
+    transform: scale(1) rotate(10deg);
+  }
+}
+
+@keyframes orbit-glow {
+  0% {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .orbit-splash,
+  .orbit-splash__logo,
+  .orbit-splash__ring,
+  .orbit-splash__glow {
+    animation: none !important;
+  }
+}
+
 /* ======== stream css overrides ======== */
 .str-video__call-stats {
   max-width: 500px;
@@ -19,72 +212,92 @@
 }
 
 .str-video__participant-details {
-  color: white;
+  color: #e4ecff;
 }
 
 .str-video__menu-container {
-  color: white;
+  color: #e4ecff;
 }
 
 .str-video__notification {
-  color: white;
+  color: #e4ecff;
 }
 
 .str-video__participant-list {
-  background-color: #1c1f2e;
+  background-color: #101a2e;
   padding: 10px;
-  border-radius: 10px;
-  color: white;
+  border-radius: 12px;
+  color: #e4ecff;
   height: 100%;
 }
 
 .str-video__call-controls__button {
   height: 40px;
+  border-radius: 999px;
+  background: rgba(16, 26, 46, 0.9);
+  border: 1px solid rgba(148, 177, 230, 0.2);
+  box-shadow: 0 16px 40px -30px rgba(47, 128, 255, 0.7);
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.str-video__call-controls__button:hover {
+  background: rgba(47, 128, 255, 0.25);
+  transform: translateY(-1px);
+}
+
+.str-video__call-controls {
+  padding: 10px 14px;
+  border-radius: 999px;
+  background: rgba(11, 17, 31, 0.75);
+  border: 1px solid rgba(148, 177, 230, 0.18);
+  backdrop-filter: blur(12px);
 }
 
 .glassmorphism {
-  background: rgba(255, 255, 255, 0.25);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
+  background: rgba(16, 26, 46, 0.75);
+  border: 1px solid rgba(148, 177, 230, 0.2);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 .glassmorphism2 {
-  background: rgba(18, 17, 17, 0.25);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background: rgba(11, 17, 31, 0.7);
+  border: 1px solid rgba(148, 177, 230, 0.14);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
 /* ==== clerk class override ===== */
 
 .cl-socialButtonsIconButton {
-  background-color: #fff;
+  background-color: #e4ecff;
 }
 .cl-socialButtonsIconButton:hover {
-  background-color: #efefef;
+  background-color: #d6e2ff;
 }
 .cl-userButtonPopoverActionButtonIcon {
-  color: white;
+  color: #e4ecff;
 }
 
 .cl-logoBox {
   height: 40px;
 }
 .cl-dividerLine {
-  background: #252a41;
+  background: #243152;
   height: 2px;
 }
 
 .cl-socialButtonsIconButton {
-  border: 3px solid #565761;
+  border: 2px solid #243152;
 }
 
 .cl-internal-wkkub3 {
-  color: white;
+  color: #e4ecff;
 }
 .cl-userButtonPopoverActionButton {
-  color: white;
+  color: #e4ecff;
 }
 .cl-navbarButton {
-  color: #fff;
+  color: #e4ecff;
 }
 /* =============================== */
 

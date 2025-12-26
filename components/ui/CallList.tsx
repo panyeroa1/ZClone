@@ -8,10 +8,6 @@ import React, { useEffect, useState } from 'react'
 import MeetingCard from './MeetingCard';
 import Loader from './Loader';
 import { useToast } from './use-toast';
-import { title } from 'process';
-
-
-
 const CallList = ({ type }: { type: 'ended' | 'upcoming' | 'recordings' }) => {
     const { endedCalls, upcomingCalls, callRecordings, isLoading } = useGetCalls();
     const router = useRouter();
@@ -73,7 +69,9 @@ const CallList = ({ type }: { type: 'ended' | 'upcoming' | 'recordings' }) => {
 
                 />
             )) : (
-                <h1>{noCallsMessage}</h1>
+                <div className="orbit-card flex min-h-[180px] items-center justify-center rounded-2xl px-6 text-center text-sm text-mist-2">
+                    {noCallsMessage}
+                </div>
             )
             }
         </div>

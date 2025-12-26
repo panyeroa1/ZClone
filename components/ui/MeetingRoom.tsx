@@ -34,42 +34,40 @@ const MeetingRoom = () => {
 
 
   return (
-    <section className="relative h-screen w-full overflow-hidden pt-4 text-white">
+    <section className="relative h-screen w-full overflow-hidden pt-6 text-white">
       <div className="relative flex size-full items-center justify-center">
-        <div className="flex size-full max-w-[1000px] items-center">
+        <div className="flex size-full max-w-[1100px] items-center">
           <CallLayout />
         </div>
-        <div className={cn("h-[calc(100vh-86px)] hidden ml-2", { 'show-block': showParticipants })}>
+        <div className={cn("ml-3 hidden h-[calc(100vh-120px)]", { 'show-block': showParticipants })}>
           <CallParticipantsList onClose={() => setshowParticipants(false)} />
         </div>
       </div>
 
-      <div className="fixed bottom-0 flex flex-wrap w-full itemx-center justify-center gap-5">
+      <div className="fixed bottom-6 left-1/2 z-20 flex w-[min(100%,900px)] -translate-x-1/2 flex-wrap items-center justify-center gap-3 rounded-full border border-white/10 bg-orbit-1/70 px-4 py-3 backdrop-blur">
         <CallControls onLeave={() => router.push('/')  } />
         <DropdownMenu>
           <div className="flex items-center">
-            <DropdownMenuTrigger className='rounded-2xl bg-[#19232d] px-4 py-4 hover:bg-[#4c535b] cursor-pointer ' >
-              <LayoutList size={20} className='text-white' />
+            <DropdownMenuTrigger className='rounded-full border border-white/15 bg-white/5 p-3 text-white transition hover:bg-white/10' >
+              <LayoutList size={18} className='text-white' />
             </DropdownMenuTrigger>
           </div>
-          <DropdownMenuContent className='border-dark-1 bg-dark-1 text-white' >
+          <DropdownMenuContent className='border-white/10 bg-orbit-2 text-white' >
             {['Grid', 'Speaker-Left', 'Speaker-Right'].map((item, index) => (
               <div key={index}>
-                <DropdownMenuItem className='cursor-pointer font-bold' onClick={() => setlayout(item.toLowerCase() as CallLayoutType)} >
+                <DropdownMenuItem className='cursor-pointer font-semibold focus:bg-white/10' onClick={() => setlayout(item.toLowerCase() as CallLayoutType)} >
                   {item}
                 </DropdownMenuItem>
-                <DropdownMenuSeparator className='border-dark-1' />
+                <DropdownMenuSeparator className='border-white/10' />
               </div>
             ))}
           </DropdownMenuContent>
         </DropdownMenu>
-        <div className='self-center rounded-2xl bg-[#19232d] px-2 py-2 hover:bg-[#4c535b] cursor-pointer '>
+        <div className='self-center rounded-full border border-white/15 bg-white/5 p-2 text-white transition hover:bg-white/10'>
           <CallStatsButton />
         </div>
-        <button onClick={() => setshowParticipants((prev) => !prev)} >
-          <div className="rounded-2xl bg-[#19232d] px-4 py-4 hover:bg-[#4c535b] cursor-pointer ">
-            <Users size={20} className='text-white' />
-          </div>
+        <button onClick={() => setshowParticipants((prev) => !prev)} className="rounded-full border border-white/15 bg-white/5 p-3 text-white transition hover:bg-white/10">
+          <Users size={18} className='text-white' />
         </button>
         {!isPersonalRoom && <EndCallButton />}
       </div>

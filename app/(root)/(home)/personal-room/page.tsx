@@ -11,8 +11,8 @@ import { useRouter } from 'next/navigation';
 
 const Table = ({ title, description }: { title: string; description: string; }) => (
   <div className='flex flex-col items-start gap-2 xl:flex-row' >
-    <h1 className='text-base font-medium text-sky-2 lg:text-xl xl:min-w-32' >{title}</h1>
-    <h1 className='truncate text-sm font-bold max-sm:max-w-[320px] lg:text-xl' >{description}</h1>
+    <h1 className='text-xs font-semibold uppercase tracking-[0.2em] text-mist-2 lg:text-sm xl:min-w-40' >{title}</h1>
+    <h1 className='truncate text-sm font-semibold text-white max-sm:max-w-[320px] lg:text-base' >{description}</h1>
   </div>
 )
 
@@ -42,27 +42,27 @@ const PersonalRoom = () => {
   }
 
   return (
-    <section className='flex size-full flex-col gap-10 text-white'>
-      <h1 className='text-3xl font-bold'>
-        Personal Room
-      </h1>
-      <div className="flex flex-col w-full  gap-8 xl:max-w-[900px]">
-        <Table title='Topic' description={`${user?.fullName}'s Meeting room`} />
+    <section className='flex size-full flex-col gap-8 text-white'>
+      <div className='flex flex-col gap-2'>
+        <p className='text-xs uppercase tracking-[0.3em] text-mist-2'>Personal space</p>
+        <h1 className='font-display text-3xl font-semibold'>Personal Room</h1>
+      </div>
+      <div className="orbit-card flex w-full flex-col gap-6 rounded-2xl px-6 py-6 xl:max-w-[900px]">
+        <Table title='Topic' description={`${user?.fullName}'s Orbit Room`} />
         <Table title='Meeting ID' description={meetingId!} />
         <Table title='Invite Link' description={meetingLink} />
       </div>
-      <div className='flex gap-5' >
-
-        <Button className='bg-blue-1' onClick={() => startRoom()} >
+      <div className='flex flex-wrap gap-4' >
+        <Button className='rounded-full bg-comet-1 px-6 text-white shadow-orbit-soft hover:bg-comet-2' onClick={() => startRoom()} >
           Start Meeting
         </Button>
 
-        <Button className='bg-dark-3' onClick={() => {
+        <Button className='rounded-full border border-white/15 bg-white/5 px-6 text-white hover:bg-white/10' onClick={() => {
           navigator.clipboard.writeText(meetingLink);
           toast({ title: 'Link Copied' })
         }} >
           Copy Invitation
-          <Image src='/icons/copy.svg' alt='copy icon' width={25} height={25} className='mx-2' />
+          <Image src='/icons/copy.svg' alt='copy icon' width={20} height={20} className='ml-2' />
         </Button>
       </div>
     </section>
