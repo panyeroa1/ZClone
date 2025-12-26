@@ -32,7 +32,7 @@ const SpeakerSelector = () => {
           <div key={device.deviceId || index}>
             <DropdownMenuItem
               className="cursor-pointer font-semibold focus:bg-white/10"
-              onClick={() => speaker.selectAudioOutput(device.deviceId)}
+              onClick={() => speaker.select(device.deviceId)}
             >
               {device.label || `Speaker ${index + 1}`}
               {selectedDevice === device.deviceId && " (Selected)"}

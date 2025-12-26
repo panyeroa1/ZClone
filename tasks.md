@@ -204,6 +204,7 @@ End log:
 - Timestamp: 2025-12-27 00:15
 
 
+
 - Changed: 
   - Updated `tailwind.config.ts` with Jitsi color palette (dark-1/2/3/4, blue-1).
   - Switched font to `Roboto` in `layout.tsx`.
@@ -232,6 +233,7 @@ End log:
 - Timestamp: 2025-12-27 00:25
 
 
+
 - Changed: 
 
   - Removed `max-w` constraint to allow full-width video.
@@ -258,6 +260,7 @@ End log:
 - Timestamp: 2025-12-27 00:35
 
 
+
 - Changed: 
   - Added `-webkit-backdrop-filter` and fixed ordering in `globals.css`.
   - Removed empty rulesets in `globals.css`.
@@ -279,6 +282,7 @@ Start log:
 
 End log:
 - Timestamp: 2025-12-27 00:50
+
 
 - Changed: 
   - Created `components/ui/SpeakerSelector.tsx` with device selection logic.
