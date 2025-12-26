@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useCall } from '@stream-io/video-react-sdk';
+import { useCall, useCallStateHooks } from '@stream-io/video-react-sdk';
 import { useToast } from '@/components/ui/use-toast';
 import { DEFAULT_LANGUAGES, type TranslatorLanguage } from '@/lib/translator/languages';
 
@@ -599,7 +599,7 @@ export const useRealtimeTranslator = () => {
       isCancelled = true;
       cleanup();
     };
-  }, [call, settings.sttEngine, settings.broadcastCaptionsEnabled, settings.sourceLang]);
+  }, [call, settings.sttEngine, settings.broadcastCaptionsEnabled, settings.sourceLang, settings.outputDeviceId, toast]);
 
   useEffect(() => {
     if (!call) return;
