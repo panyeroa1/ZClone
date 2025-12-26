@@ -19,7 +19,7 @@ const config = {
     },
     extend: {
       fontFamily: {
-        sans: ["var(--font-roboto)", "system-ui", "sans-serif"],
+        sans: ["Helvetica", "var(--font-roboto)", "system-ui", "sans-serif"],
       },
       colors: {
         dark: {

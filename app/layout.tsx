@@ -14,6 +14,14 @@ export const metadata: Metadata = {
   }
 };
 
+import { Roboto } from "next/font/google";
+
+const roboto = Roboto({
+  subsets: ["latin"],
+  weight: ["100", "300", "400", "500", "700", "900"],
+  variable: "--font-roboto",
+});
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -22,7 +30,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="h-full">
       <ClerkProvider appearance={{ layout: { logoImageUrl: '/images/watermark.svg', socialButtonsVariant: 'iconButton' }, variables: { colorText: '#FFFFFF', colorPrimary: '#1776F2', colorBackground: '#131519', colorInputBackground: '#2b303b', colorInputText: '#FFFFFF' } }}>
-        <body className="orbit-shell font-sans antialiased">
+        <body className={`${roboto.variable} orbit-shell font-sans antialiased`}>
           <EntryLogoSplash />
           {children}
           <Toaster/>
