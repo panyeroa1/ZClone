@@ -33,7 +33,7 @@ const MeetingSetup = ({ setIsSetupComplete }: { setIsSetupComplete: (value:boole
           <h1 className="font-display text-3xl font-semibold">Ready to join</h1>
           <p className="text-sm text-mist-2">Confirm your camera and mic before you enter the room.</p>
         </div>
-        <div className="overflow-hidden rounded-2xl border border-white/10 bg-orbit-3/70">
+        <div className="aspect-video overflow-hidden rounded-2xl border border-white/10 bg-orbit-3/70">
           <VideoPreview />
         </div>
         <div className="flex flex-wrap items-center gap-4">
