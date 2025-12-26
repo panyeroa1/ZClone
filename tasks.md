@@ -235,3 +235,27 @@ End log:
 - Status: DONE
 
 ------------------------------------------------------------
+
+------------------------------------------------------------
+
+Task ID: T-0009
+Title: Resolve Lint and Style Issues
+
+Start log:
+- Timestamp: 2025-12-27 00:30
+- Plan: 
+  - Fix `globals.css` safari compatibility and mixin ordering.
+  - Add title attribute to button in `MeetingRoom.tsx`.
+  - Fix markdown formatting errors in `README.md` and `tasks.md`.
+
+End log:
+- Timestamp: 2025-12-27 00:35
+- Changed: 
+  - Added `-webkit-backdrop-filter` and fixed ordering in `globals.css`.
+  - Removed empty rulesets in `globals.css`.
+  - Added `title` attribute to user button in `MeetingRoom.tsx`.
+  - Fixed markdown spacing issues.
+- Tests: Verified by IDE lint report.
+- Status: DONE
+
+------------------------------------------------------------
